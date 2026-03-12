@@ -3,7 +3,14 @@ import { Send, User, Bot, Loader2, Info, Sparkles } from "lucide-react";
 import { GoogleGenAI, Chat } from "@google/genai";
 import { cn } from "@/src/lib/utils";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let ai: GoogleGenAI | null = null;
+try {
+  if (process.env.GEMINI_API_KEY) {
+    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+} catch (e) {
+  console.warn("GoogleGenAI initialization skipped: API Key missing or invalid.");
+}
 
 type Message = {
   id: string;
@@ -37,21 +44,41 @@ export default function Diagnosis() {
   }, [messages]);
 
   useEffect(() => {
-    chatRef.current = ai.chats.create({
-      model: "gemini-3-pro-preview",
-      config: {
-        systemInstruction: "你是一个经验丰富的老中医。请根据用户提供的症状、舌象、脉象等信息，进行中医辨证分析。请给出：1. 证型 2. 治法 3. 推荐方剂及加减 4. 调护建议。请使用专业的中医术语，但解释要清晰易懂。语气要温和、专业。",
-      },
-    });
+    if (!ai) return;
+    try {
+      chatRef.current = ai.chats.create({
+        model: "gemini-3-pro-preview",
+        config: {
+          systemInstruction: "你是一个经验丰富的老中医。请根据用户提供的症状、舌象、脉象等信息，进行中医辨证分析。请给出：1. 证型 2. 治法 3. 推荐方剂及加减 4. 调护建议。请使用专业的中医术语，但解释要清晰易懂。语气要温和、专业。",
+        },
+      });
+    } catch (e) {
+      console.error("Failed to create chat:", e);
+    }
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading || !chatRef.current) return;
+    if (!input.trim() || isLoading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+
+    if (!chatRef.current) {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: "抱歉，系统未配置有效的 API Key，无法连接到 AI 服务。如果您在 GitHub Pages 上预览，请在本地环境运行并配置 GEMINI_API_KEY。",
+          },
+        ]);
+        setIsLoading(false);
+      }, 500);
+      return;
+    }
 
     try {
       const response = await chatRef.current.sendMessage({ message: userMsg.content });
