@@ -211,11 +211,11 @@ export default function Home() {
 
         <div className="space-y-3">
           {[
-            { name: "张先生", gender: "男", age: 45, diagnosis: "肝胃不和证", date: "今天 10:30" },
-            { name: "李女士", gender: "女", age: 32, diagnosis: "气血两虚证", date: "昨天 15:20" },
-            { name: "王大爷", gender: "男", age: 68, diagnosis: "肾阳虚衰证", date: "昨天 09:15" }
+            { id: "1", name: "张先生", gender: "男", age: 45, diagnosis: "肝胃不和证", date: "今天 10:30" },
+            { id: "2", name: "李女士", gender: "女", age: 32, diagnosis: "气血两虚证", date: "昨天 15:20" },
+            { id: "3", name: "王大爷", gender: "男", age: 68, diagnosis: "肾阳虚衰证", date: "昨天 09:15" }
           ].map((record, i) => (
-            <div key={i} className="bg-white/80 backdrop-blur-sm border border-[#8b7355]/20 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+            <Link key={i} to={`/record/${record.id}`} className="bg-white/80 backdrop-blur-sm border border-[#8b7355]/20 rounded-2xl p-4 shadow-sm flex items-center justify-between active:scale-95 transition-transform block">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#8b7355]/10 flex items-center justify-center text-[#8b7355]">
                   <Activity className="w-5 h-5" />
@@ -234,7 +234,7 @@ export default function Home() {
                 <Calendar className="w-3 h-3" />
                 {record.date}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

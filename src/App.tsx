@@ -5,6 +5,7 @@ import Diagnosis from "./pages/Diagnosis";
 import Heritage from "./pages/Heritage";
 import Classics from "./pages/Classics";
 import Profile from "./pages/Profile";
+import RecordDetail from "./pages/RecordDetail";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="heritage" element={<Heritage />} />
           <Route path="classics" element={<Classics />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="record/:id" element={<RecordDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
