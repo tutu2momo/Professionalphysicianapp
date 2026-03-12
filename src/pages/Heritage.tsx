@@ -110,7 +110,7 @@ export default function Heritage() {
         </div>
 
         <div 
-          onClick={() => navigate('/diagnosis')}
+          onClick={() => navigate('/heritage/chat')}
           className="rounded-2xl p-5 mb-6 relative overflow-hidden bg-gradient-to-br from-[#4a6fa5]/90 to-[#3a5a85]/95 border border-[#4a6fa5]/30 shadow-lg cursor-pointer active:scale-95 transition-transform"
         >
           <div className="relative z-10 flex items-center gap-4">
