@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, User, Bot, Loader2, Info, Sparkles } from "lucide-react";
+import { Send, User, Bot, Loader2, Info, Sparkles, ChevronLeft } from "lucide-react";
 import { GoogleGenAI, Chat } from "@google/genai";
 import { cn } from "@/src/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 let ai: GoogleGenAI | null = null;
 try {
@@ -23,6 +24,7 @@ const quickReplies = [
 ];
 
 export default function Diagnosis() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -110,36 +112,44 @@ export default function Diagnosis() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#f5f1eb] to-[#ebe6dd] pb-28">
-      <div className="px-4 py-4 flex items-center gap-3 bg-gradient-to-br from-[#8b7355]/95 to-[#6b5d4f]/98 border-b border-[#8b7355]/30 shadow-[0_2px_12px_rgba(44,36,22,0.15)] sticky top-0 z-10">
-        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.1)] bg-[#f5f1eb] flex items-center justify-center">
-          <Bot className="w-6 h-6 text-[#8b7355]" />
+    <div className="min-h-screen flex flex-col bg-[#F8F9F5] pb-28 font-sans relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none bg-[url('/bg-qingming.jpg')] bg-cover bg-center opacity-90" />
+      
+      {/* Header */}
+      <div className="px-4 py-3 flex items-center gap-3 bg-white/80 backdrop-blur-md border-b border-[#B8D8C8]/40 sticky top-0 z-10">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-[#2D5A4A] active:scale-95 transition-transform">
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-[#E8F5F0] flex items-center justify-center border border-[#B8D8C8]/30">
+          <Bot className="w-6 h-6 text-[#2D5A4A]" />
         </div>
         <div>
-          <h1 className="text-base font-serif text-[#f5f1eb] font-medium tracking-wide">智能辨证助手</h1>
-          <p className="text-xs font-serif text-[#f5f1eb]/80 tracking-wide">AI辅助中医诊断分析</p>
+          <h1 className="text-base font-bold text-[#333333] tracking-wide">智能辨证助手</h1>
+          <p className="text-xs text-[#666666] tracking-wide">AI辅助中医诊断分析</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <div className="bg-[#4a6fa5]/10 border border-[#4a6fa5]/20 rounded-xl p-3 flex items-start gap-2 mb-4">
-          <Info className="w-4 h-4 text-[#4a6fa5] mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-[#4a6fa5] leading-relaxed">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 relative z-10">
+        {/* Disclaimer */}
+        <div className="bg-[#E8F5F0]/50 border border-[#B8D8C8]/40 rounded-xl p-3 flex items-start gap-2 mb-4 backdrop-blur-sm">
+          <Info className="w-4 h-4 text-[#2D5A4A] mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-[#2D5A4A]/80 leading-relaxed">
             免责声明：本系统的分析结果仅供临床医生参考，不能替代专业医疗诊断。请结合患者实际情况进行辨证论治。
           </p>
         </div>
 
+        {/* Messages */}
         {messages.map((msg) => (
           <div key={msg.id} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
             <div
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-3 shadow-[0_2px_8px_rgba(44,36,22,0.1)]",
+                "max-w-[85%] rounded-2xl px-4 py-3 shadow-sm",
                 msg.role === "user"
-                  ? "rounded-br-sm bg-gradient-to-br from-[#4a6fa5]/90 to-[#4a6fa5]/95 border border-[#4a6fa5]/30 text-[#f5f1eb]"
-                  : "rounded-bl-sm bg-white/90 border border-[#8b7355]/20 text-[#2c2416]"
+                  ? "rounded-br-sm bg-[#2D5A4A] text-white"
+                  : "rounded-bl-sm bg-white/90 border border-[#B8D8C8]/40 text-[#333333] backdrop-blur-sm"
               )}
             >
-              <div className="text-sm leading-relaxed whitespace-pre-line font-serif tracking-wide">
+              <div className="text-sm leading-relaxed whitespace-pre-line tracking-wide">
                 {msg.content}
               </div>
             </div>
@@ -147,17 +157,18 @@ export default function Diagnosis() {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-[75%] rounded-2xl rounded-bl-sm px-4 py-3 bg-white/90 border border-[#8b7355]/20 shadow-[0_2px_8px_rgba(44,36,22,0.1)]">
-              <Loader2 className="w-5 h-5 text-[#8b7355] animate-spin" />
+            <div className="max-w-[75%] rounded-2xl rounded-bl-sm px-4 py-3 bg-white/90 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-sm">
+              <Loader2 className="w-5 h-5 text-[#2D5A4A] animate-spin" />
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 bg-white/95 border-t border-[#8b7355]/20 shadow-[0_-2px_12px_rgba(44,36,22,0.08)] z-20 flex flex-col">
-        <div className="flex gap-2 overflow-x-auto px-4 py-2 scrollbar-none border-b border-[#8b7355]/10">
-          <div className="flex items-center gap-1 text-[#8b7355] text-xs font-medium mr-1 flex-shrink-0">
+      {/* Input Area */}
+      <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#B8D8C8]/40 z-20 flex flex-col pb-safe">
+        <div className="flex gap-2 overflow-x-auto px-4 py-2 scrollbar-none border-b border-[#EAEAEA]">
+          <div className="flex items-center gap-1 text-[#8B6E58] text-xs font-medium mr-1 flex-shrink-0">
             <Sparkles className="w-3 h-3" />
             快捷输入:
           </div>
@@ -165,7 +176,7 @@ export default function Diagnosis() {
             <button
               key={reply}
               onClick={() => handleQuickReply(reply)}
-              className="whitespace-nowrap px-3 py-1 rounded-full bg-[#f5f1eb] border border-[#8b7355]/20 text-xs text-[#6b5d4f] hover:bg-[#8b7355]/10 transition-colors"
+              className="whitespace-nowrap px-3 py-1 rounded-full bg-[#E8F5F0] border border-[#B8D8C8]/30 text-xs text-[#2D5A4A] hover:bg-[#B8D8C8]/20 transition-colors"
             >
               {reply}
             </button>
@@ -178,15 +189,15 @@ export default function Diagnosis() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="输入患者体质、症状、舌脉象..."
-            className="flex-1 px-4 py-3 rounded-full text-sm border-none outline-none bg-[#f5f1eb]/80 font-serif text-[#2c2416] tracking-wide placeholder:text-[#9b8b7e]"
+            className="flex-1 px-4 py-3 rounded-full text-sm border-none outline-none bg-[#F8F9F5] text-[#333333] tracking-wide placeholder:text-[#999999] focus:ring-1 focus:ring-[#B8D8C8]"
             disabled={isLoading}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#4a6fa5]/90 to-[#4a6fa5]/95 border border-[#4a6fa5]/30 shadow-[0_2px_8px_rgba(74,111,165,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 bg-[#2D5A4A] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity active:scale-95"
           >
-            <Send className="w-5 h-5 text-[#f5f1eb] ml-0.5" />
+            <Send className="w-5 h-5 text-white ml-0.5" />
           </button>
         </div>
       </div>
