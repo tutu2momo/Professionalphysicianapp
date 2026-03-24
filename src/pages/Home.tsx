@@ -118,7 +118,7 @@ export default function Home() {
           <h2 className="text-[15px] font-bold text-[#333333] mb-3 tracking-wide">传承学习中心</h2>
           <div className="grid grid-cols-2 gap-3">
             {/* Card 1 */}
-            <div className="rounded-2xl p-4 bg-white/70 border border-[#B8D8C8]/40 shadow-sm relative overflow-hidden backdrop-blur-md">
+            <Link to="/heritage" className="rounded-2xl p-4 bg-white/70 border border-[#B8D8C8]/40 shadow-sm relative overflow-hidden backdrop-blur-md block active:scale-95 transition-transform hover:bg-white/90">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-full bg-[#2D5A4A] flex items-center justify-center shadow-sm">
                   <GraduationCap className="w-4 h-4 text-white" />
@@ -139,10 +139,10 @@ export default function Home() {
               <div className="inline-block px-2.5 py-1 rounded-lg bg-[#E8F5F0] text-[10px] text-[#2D5A4A] border border-[#B8D8C8]/30">
                 多维度检索
               </div>
-            </div>
+            </Link>
 
             {/* Card 2 */}
-            <div className="rounded-2xl p-4 bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md">
+            <Link to="/heritage/eval" className="rounded-2xl p-4 bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md block active:scale-95 transition-transform hover:bg-white/90">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-full bg-[#8B6E58] flex items-center justify-center shadow-sm">
                   <Award className="w-4 h-4 text-white" />
@@ -163,7 +163,7 @@ export default function Home() {
                   <span className="font-bold text-[#333333]">82%</span>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
 

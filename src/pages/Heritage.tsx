@@ -92,9 +92,16 @@ export default function Heritage() {
               <Medal className="w-5 h-5 text-[#8B6E58]" />
               <h3 className="text-sm font-bold text-[#8B6E58] tracking-wide">名医思想传承</h3>
             </div>
-            <p className="text-xs leading-relaxed text-[#666666] tracking-wide">
+            <p className="text-xs leading-relaxed text-[#666666] tracking-wide mb-4">
               本医案辨证思想来源于名老中医临床经验总结，体现了中医独特的学术思想和诊疗特色，强调辨证求因，审因论治。
             </p>
+            <button
+              onClick={() => navigate('/heritage/eval', { state: { case: selectedCase } })}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#8B6E58] to-[#A08570] text-white text-sm font-bold tracking-wider shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2"
+            >
+              <Medal className="w-4 h-4" />
+              进入传承评价
+            </button>
           </div>
         </div>
         </div>
@@ -112,21 +119,30 @@ export default function Heritage() {
           <p className="text-xs text-[#666666] tracking-wider">医案分析与范例检索</p>
         </div>
 
-        <div 
-          onClick={() => navigate('/heritage/chat')}
-          className="rounded-2xl p-5 mb-6 relative overflow-hidden bg-gradient-to-r from-[#B8D8C8] to-[#9CBDB0] shadow-md cursor-pointer active:scale-95 transition-transform"
-        >
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center flex-shrink-0">
-              <BookOpen className="w-6 h-6 text-[#2D5A4A]" />
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div 
+            onClick={() => navigate('/heritage/chat')}
+            className="rounded-2xl p-4 relative overflow-hidden bg-gradient-to-br from-[#B8D8C8] to-[#9CBDB0] shadow-md cursor-pointer active:scale-95 transition-transform flex flex-col items-center text-center"
+          >
+            <div className="w-10 h-10 mb-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-[#2D5A4A]" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-base text-[#2D5A4A] font-bold mb-1 tracking-wide">AI智能学习</h3>
-              <p className="text-xs text-[#2D5A4A]/80 tracking-wide">输入体质症状，学习名医诊疗思路</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-[#2D5A4A]/70" />
+            <h3 className="text-sm text-[#2D5A4A] font-bold mb-1 tracking-wide">AI智能学习</h3>
+            <p className="text-[10px] text-[#2D5A4A]/80 tracking-wide leading-tight">输入体质症状<br/>学习名医思路</p>
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
           </div>
-          <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+
+          <div 
+            onClick={() => navigate('/heritage/eval')}
+            className="rounded-2xl p-4 relative overflow-hidden bg-gradient-to-br from-[#E8D8B8] to-[#D8C8A8] shadow-md cursor-pointer active:scale-95 transition-transform flex flex-col items-center text-center"
+          >
+            <div className="w-10 h-10 mb-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+              <Medal className="w-5 h-5 text-[#8B6E58]" />
+            </div>
+            <h3 className="text-sm text-[#8B6E58] font-bold mb-1 tracking-wide">传承评价</h3>
+            <p className="text-[10px] text-[#8B6E58]/80 tracking-wide leading-tight">模拟诊疗沟通<br/>比对名医路径</p>
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+          </div>
         </div>
 
         <div className="mb-6">
