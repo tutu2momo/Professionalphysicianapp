@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Send, Sparkles, ChevronDown, Bot, User } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, ChevronDown, Bot, User, Mic, MicOff, ArrowRight } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 type Message = {
@@ -20,16 +20,32 @@ export default function HeritageEval() {
   
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
   
-  const initialPatientInfo = caseData 
-    ? `患者信息：${caseData.summary.split('\n')[0]}` 
-    : "患者男，40岁，岭南高管，夏季就诊。烧心胀满，舌黄厚腻，脉弦滑数。";
+  const getPatientInfo = () => {
+    if (caseData) {
+      if (caseData.summary.includes('【患者基本信息】')) {
+        const match = caseData.summary.match(/([\s\S]*?)【辨证】/);
+        if (match) return match[1].trim();
+      }
+      const parts = caseData.summary.split('\n');
+      const basicInfo = parts[0];
+      // Extract everything before 【治法】 or 【名医点拨】 as four diagnostic info
+      let fourDiag = parts.length > 1 ? parts[1] : "暂无详细四诊信息";
+      if (fourDiag.startsWith("【")) fourDiag = basicInfo; // fallback
+      return `【患者基本信息】\n${basicInfo}\n\n【既往病史】\n平素体质特征及既往相关病史（请根据基本信息推断）。\n\n【四诊信息】\n${fourDiag}`;
+    }
+    return "【患者基本信息】\n患者男，45岁，企业高管，秋季就诊。\n\n【既往病史】\n平素工作压力极大，常有应酬，嗜食肥甘厚味及饮酒。既往有“脂肪肝”、“高脂血症”病史3年。近半年来反复出现胃脘胀满，未系统治疗。\n\n【四诊信息】\n主诉：入睡困难伴多梦易醒2个月。\n现病史：近2个月来，每晚需辗转1-2小时方能入睡，且睡中多梦，易惊醒，醒后难以复睡。伴见心烦意乱，胸闷脘痞，口苦泛恶，头重如裹，大便黏滞不爽。查体：形体偏胖，面垢油光。舌质红，苔黄腻而厚，脉滑数。";
+  };
+
+  const initialPatientInfo = getPatientInfo();
 
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: `欢迎进入传承评价模式。请您根据以下患者基本信息，给出您的辨证思路、治法和方药：\n\n${initialPatientInfo}`,
+      content: `欢迎进入传承评价模式。请您仔细阅读以下患者信息，并从以下四个维度给出您的完整诊疗方案：\n1. 病史分析\n2. 四诊询问落脚点\n3. 诊疗详情（辨证、治法、方药）\n4. 疾病养护建议\n\n${initialPatientInfo}`,
     }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,6 +57,61 @@ export default function HeritageEval() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    // Initialize Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'zh-CN';
+
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        if (finalTranscript) {
+          setInputValue(prev => prev + finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    } else {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          setIsRecording(true);
+        } catch (e) {
+          console.error("Failed to start recording:", e);
+        }
+      } else {
+        alert("您的浏览器不支持语音识别功能。");
+      }
+    }
+  };
 
   const toggleThinking = (id: string) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, isThinkingExpanded: !m.isThinkingExpanded } : m));
@@ -65,22 +136,31 @@ export default function HeritageEval() {
     }]);
 
     const steps = caseData ? [
-      `【第一步：提取用户辨证要点】\n用户提到：${inputValue.substring(0, 30)}...`,
-      `【第二步：提取名老中医辨证要点】\n名老中医思路：${caseData.syndrome}。\n治法：${caseData.summary.match(/【治法】(.*?)\n/)?.[1] || "暂无"}\n方药：${caseData.tags[1]}。`,
-      `【第三步：思维链路比对】\n1. 病机比对：用户辨证与名医（${caseData.doctor}）的“${caseData.syndrome}”进行比对。\n2. 治法比对：比对用户治法与名医治法。\n3. 方药比对：比对用户方药与名医选方（${caseData.tags[1]}）。`,
-      "【第四步：综合评分与建议生成】\n辨证准确度：80%\n治法契合度：75%\n方药相似度：85%\n综合评分：80分"
+      `【第一步：整体审察】\n患者基本情况与时空背景分析 → 锁定体质与发病诱因`,
+      `【第二步：四诊合参，抓主症】\n结合舌脉与主诉 → 明确核心病理要素`,
+      `【第三步：病机层次化】\n病位与病性分析 → 确立“${caseData.syndrome}”之核心病机`,
+      `【第四步：方证相应 (理法方药)】\n治法：${caseData.summary.match(/【治法】(.*?)\n/)?.[1] || "对症治疗"}\n选方：${caseData.tags[1]} → 随症加减，精准施治`,
+      `【第五步：提取用户诊疗方案】\n提取用户的病史分析、四诊落脚点、诊疗详情及养护建议。`,
+      `【第六步：多维度思维比对】\n1. 病史与四诊比对：评估用户是否抓住了名医关注的核心病机与体征。\n2. 诊疗详情比对：对比辨证准确度、治法契合度及方药相似度。\n3. 养护建议比对：评估生活调摄建议的全面性与针对性。`,
+      "【第七步：综合评分与建议生成】\n病史与四诊分析：85%\n诊疗详情契合度：80%\n养护建议完善度：90%\n综合评分：85分"
     ] : [
-      "【第一步：提取用户辨证要点】\n用户提到：湿热中阻，半夏泻心汤。",
-      "【第二步：提取名老中医辨证要点】\n名老中医思路：夏季+岭南+高管压力 → 暑湿+肝郁；舌黄厚腻+脉弦滑数+烧心胀满 → 湿热中阻+肝胃不和。\n治法：辛开苦降，疏肝和胃，清热化湿。\n方药：半夏泻心汤合四逆散加减。",
-      "【第三步：思维链路比对】\n1. 病机比对：用户抓住了“湿热中阻”，但遗漏了“肝胃不和”（脉弦、高管压力）。\n2. 治法比对：用户未明确提出治法，但方药提示了辛开苦降。\n3. 方药比对：用户选用了半夏泻心汤，方向正确，但未合用四逆散以疏肝理气。",
-      "【第四步：综合评分与建议生成】\n辨证准确度：70%\n治法契合度：60%\n方药相似度：75%\n综合评分：85分"
+      "【第一步：整体审察】\n│\n├─ 天时：秋季（燥气当令，易伤阴津）\n├─ 地理：城市（快节奏）\n└─ 人：45岁男性，高管（压力大，应酬多）→ 脾胃受损，气机郁滞",
+      "【第二步：四诊合参，抓主症】\n│\n├─ 望诊：形体偏胖，面垢油光，舌红苔黄腻厚 → 痰热内蕴之象\n├─ 问诊核心：入睡困难，多梦易醒（神不守舍）；胸闷脘痞，口苦泛恶（胃气不和）\n└─ 切诊：脉滑数 → 滑主痰湿，数主热 → 脉症合参，属痰热内扰",
+      "【第三步：病机层次化】\n│\n├─ 病性：痰热为标，脾胃虚弱为本\n├─ 病位：胃（主受纳腐熟）、心（主神明）\n├─ 病势：脾失健运 → 聚湿生痰 → 郁久化热 → 痰热上扰心神\n└─ 病机关键词：痰热内扰，胃气不和",
+      "【第四步：方证相应 (理法方药)】\n│\n├─ 治法：清热化痰，和胃安神\n├─ 选方：黄连温胆汤加减\n└─ 加减化裁：\n    ├─ 痰热重 → 重用黄连清心胃之火\n    └─ 神志不宁 → 加生龙骨、生牡蛎重镇安神",
+      "【第五步：提取用户诊疗方案】\n提取用户的病史分析、四诊落脚点、诊疗详情及养护建议。",
+      "【第六步：多维度思维比对】\n1. 病史与四诊比对：用户关注了痰热，但对“胃脘胀满”导致的胃气不和分析不足。\n2. 诊疗详情比对：辨证大方向正确，方药选用了温胆汤类，但遗漏了清热之黄连及重镇安神之品。\n3. 养护建议比对：用户给出了饮食建议，但缺乏针对失眠的作息及运动调护建议。",
+      "【第七步：综合评分与建议生成】\n病史与四诊分析：80%\n诊疗详情契合度：85%\n养护建议完善度：75%\n综合评分：82分"
     ];
 
-    const finalContent = caseData ? 
-      `【评价结果】\n您的辨证思路具有一定的合理性。名老中医（${caseData.doctor}）的最终辨证为“${caseData.syndrome}”，选方为“${caseData.tags[1]}”。\n\n【名医点拨】\n${caseData.summary.split('\n\n')[1] || ""}\n\n继续努力！中医辨证需要四诊合参，整体审察。` :
-      "【评价结果】\n您的辨证大方向是正确的，抓住了“湿热中阻”的核心病机，选用的半夏泻心汤也非常对症。\n\n【名医点拨】\n名老中医在诊疗时，除了关注“舌黄厚腻”的湿热象，还特别注意到了患者“岭南高管、夏季就诊”的时空背景，以及“脉弦”的体征，从而敏锐地捕捉到了“肝胃不和”的兼夹证。因此，名老中医在半夏泻心汤的基础上，合用了四逆散来疏肝理气。\n\n继续努力！中医辨证需要四诊合参，整体审察。";
+    const doctorTipMatch = caseData?.summary.match(/【名医点拨】\n?([\s\S]*)$/);
+    const doctorTip = doctorTipMatch ? doctorTipMatch[1].trim() : "中医辨证需四诊合参，注重整体观念与辨证论治的结合。";
 
-    const finalScore = caseData ? 80 : 85;
+    const finalContent = caseData ? 
+      `【评价结果】\n您的整体诊疗思路具有较好的临床参考价值。在病史分析和四诊落脚点上，基本契合名老中医（${caseData.doctor}）的思路。辨证为“${caseData.syndrome}”，选方“${caseData.tags[1]}”方向正确。\n\n【名医点拨】\n${doctorTip}\n\n【养护建议补充】\n在您给出的养护建议基础上，名医通常还会强调针对该证型的特定情志疏导或顺时养生建议。继续努力！` :
+      "【评价结果】\n您的辨证大方向是正确的，抓住了“痰热内扰”的核心病机，选用的温胆汤类方剂也非常对症。但在病史分析和四诊落脚点上，对“胃不和则卧不安”的挖掘不够深入。\n\n【名医点拨】\n名老中医在诊疗时，除了关注“舌黄厚腻”的痰热象，还特别注意到了患者“嗜食肥甘厚味、胃脘胀满”的病史，从而敏锐地捕捉到了“胃气不和”的兼夹证。因此，在温胆汤的基础上，重用黄连清热，并加生龙骨、生牡蛎重镇安神，切忌单纯使用滋阴安神之品以免敛邪留痰。\n\n【养护建议补充】\n除了饮食清淡外，针对此类患者，睡前避免思考工作（调神）和傍晚适度运动（助运化痰）同样是治疗的关键一环。继续努力！";
+
+    const finalScore = caseData ? 85 : 82;
 
     let currentStep = 0;
     const intervalTime = Math.max(500, Math.floor(6000 / steps.length));
@@ -153,31 +233,71 @@ export default function HeritageEval() {
               <div className="flex flex-col gap-2">
                 {/* Thinking Process */}
                 {(msg.thinkingSteps && msg.thinkingSteps.length > 0) && (
-                  <div className="bg-white/60 backdrop-blur-sm border border-[#B8D8C8]/30 rounded-2xl p-3 shadow-sm">
+                  <div className="bg-[#F8F9F5] rounded-xl border border-[#EAEAEA] overflow-hidden shadow-sm">
                     <button 
                       onClick={() => toggleThinking(msg.id)}
-                      className="flex items-center gap-2 text-[#8B6E58] mb-2 w-full"
+                      className="w-full flex items-center justify-between p-3 bg-white/50 hover:bg-white/80 transition-colors"
                     >
-                      <Sparkles className="w-4 h-4" />
-                      <span className="text-xs font-bold">{msg.isThinking ? "思维链路比对中..." : "名医思维比对路径"}</span>
-                      <ChevronDown className={cn("w-4 h-4 ml-auto transition-transform", msg.isThinkingExpanded ? "rotate-180" : "")} />
+                      <div className="flex items-center gap-2 text-[#8B6E58]">
+                        <Sparkles className="w-4 h-4" />
+                        <span className="text-xs font-bold">{msg.isThinking ? "名老中医深度思考与比对中..." : "名医思维链及多维度比对"}</span>
+                      </div>
+                      <ChevronDown className={cn("w-4 h-4 text-[#8B6E58] transition-transform", msg.isThinkingExpanded ? "rotate-180" : "")} />
                     </button>
                     
                     {msg.isThinkingExpanded && (
-                      <div className="space-y-2 mt-3">
-                        {msg.thinkingSteps.map((step, idx) => {
-                          const isTitle = step.startsWith("【");
-                          const titleMatch = step.match(/^【(.*?)】/);
-                          const title = titleMatch ? titleMatch[1] : "";
-                          const content = step.replace(/^【.*?】\n?/, "");
-                          
-                          return (
-                            <div key={idx} className="text-[13px] text-[#666666] leading-relaxed bg-white/50 p-2 rounded-lg border border-[#B8D8C8]/20">
-                              {isTitle && <div className="font-bold text-[#2D5A4A] mb-1">{title}</div>}
-                              <div className="whitespace-pre-line font-mono text-xs">{content}</div>
-                            </div>
-                          );
-                        })}
+                      <div className="p-3 pt-1">
+                        <div className="relative border-l-2 border-[#B8D8C8]/40 ml-2 pl-4 space-y-4 py-2">
+                          {msg.thinkingSteps.map((step, idx) => {
+                            if (!step) return null;
+                            
+                            const titleMatch = step.match(/^【(.*?)】/);
+                            if (titleMatch) {
+                              const title = titleMatch[1];
+                              const content = step.replace(/^【.*?】\n?/, '');
+                              
+                              if (!content.includes('\n') && content.includes('→')) {
+                                const parts = content.split('→');
+                                return (
+                                  <div key={idx} className="relative transition-opacity duration-500 opacity-100">
+                                    <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#2D5A4A] ring-4 ring-[#F8F9F5]" />
+                                    <div className="bg-white rounded-lg p-2.5 shadow-sm border border-[#EAEAEA]">
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="text-[10px] font-bold text-white bg-[#8B6E58] px-1.5 py-0.5 rounded-sm">{title}</span>
+                                        <span className="text-xs text-[#666666] font-medium">{parts[0].trim()}</span>
+                                      </div>
+                                      <div className="flex items-start gap-1.5 mt-1.5 pt-1.5 border-t border-dashed border-[#EAEAEA]">
+                                        <ArrowRight className="w-3.5 h-3.5 text-[#2D5A4A] mt-0.5 flex-shrink-0" />
+                                        <span className="text-xs font-bold text-[#2D5A4A]">{parts[1].trim()}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div key={idx} className="relative transition-opacity duration-500 opacity-100">
+                                    <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#2D5A4A] ring-4 ring-[#F8F9F5]" />
+                                    <div className="bg-white rounded-lg p-3 shadow-sm border border-[#EAEAEA]">
+                                      <div className="mb-2">
+                                        <span className="text-[10px] font-bold text-white bg-[#8B6E58] px-1.5 py-0.5 rounded-sm">{title}</span>
+                                      </div>
+                                      <div className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap font-mono">
+                                        {content}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            }
+
+                            return (
+                              <div key={idx} className="relative transition-opacity duration-500 opacity-100">
+                                <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-[#B8D8C8] ring-4 ring-[#F8F9F5]" />
+                                <div className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap">{step}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -220,13 +340,11 @@ export default function HeritageEval() {
             </div>
             <div className="grid grid-cols-1 gap-3">
               {(caseData ? [
-                `我认为是${caseData.syndrome}，应该用${caseData.tags[1]}。`,
-                "患者症状比较复杂，可能是脾胃虚弱兼有湿热，建议用平胃散加减。",
-                `辨证为${caseData.syndrome}。治法：${caseData.summary.match(/【治法】(.*?)\n/)?.[1] || "对症治疗"}。方用${caseData.tags[1]}。`
+                `【病史分析】患者既往可能有相关病史，体质偏弱。\n【四诊落脚点】重点关注舌脉变化及主诉症状。\n【诊疗详情】辨证为${caseData.syndrome}，治法：${caseData.summary.match(/【治法】(.*?)\n/)?.[1] || "对症治疗"}。方用${caseData.tags[1]}。\n【养护建议】饮食清淡，规律作息，避免劳累，定期复诊。`,
+                `【病史分析】结合时令与地域特点，患者易受外邪侵袭。\n【四诊落脚点】舌象提示湿热/虚寒，脉象提示气血运行状态。\n【诊疗详情】考虑为${caseData.syndrome}的变证，建议使用${caseData.tags[1]}加减。\n【养护建议】注意保暖/防暑，适当运动，保持心情舒畅。`
               ] : [
-                "我认为是湿热中阻，应该用半夏泻心汤。",
-                "患者舌黄厚腻，脉弦滑数，应该是肝胆湿热，建议用龙胆泻肝汤。",
-                "辨证为湿热中阻兼肝胃不和。治法：辛开苦降，疏肝和胃。方用半夏泻心汤合四逆散。"
+                "【病史分析】患者平素嗜食肥甘，且有脂肪肝史，脾胃受损，易生痰湿。\n【四诊落脚点】失眠伴胸闷口苦，舌黄腻脉滑数，落脚于痰热扰心及胃失和降。\n【诊疗详情】辨证：痰热内扰，胃气不和。治法：清热化痰，和胃安神。方药：黄连温胆汤加减。\n【养护建议】饮食清淡忌酒腻；晚11点前入睡；傍晚适度运动助运化；7剂后复诊。",
+                "【病史分析】既往高管压力大，近期失眠多梦，考虑心神失养或邪气内扰。\n【四诊落脚点】重点关注入睡困难及舌苔黄腻，判断为实证失眠。\n【诊疗详情】辨证：痰热扰心。治法：清热化痰安神。方药：温胆汤合酸枣仁汤加减。\n【养护建议】睡前泡脚，避免熬夜；少食多餐，忌食生冷；保持心情舒畅。"
               ]).map((example, idx) => (
                 <button
                   key={idx}
@@ -245,7 +363,18 @@ export default function HeritageEval() {
 
       {/* Input Area */}
       <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#B8D8C8]/40 p-3 pb-safe shadow-sm z-50">
-        <div className="flex items-center gap-3 max-w-md mx-auto">
+        <div className="flex items-center gap-2 max-w-md mx-auto">
+          <button
+            onClick={toggleRecording}
+            className={cn(
+              "p-2 rounded-full transition-colors flex-shrink-0",
+              isRecording ? "text-red-500 bg-red-50 animate-pulse" : "text-[#2D5A4A] hover:bg-[#E8F5F0]"
+            )}
+            title="语音输入"
+          >
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
+          
           <div className="flex-1 bg-[#F8F9F5] rounded-full px-4 py-2.5 border border-[#EAEAEA] focus-within:ring-1 focus-within:ring-[#B8D8C8] transition-shadow">
             <input
               type="text"

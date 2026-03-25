@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Mic, MicOff } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 type Message = {
@@ -13,6 +13,8 @@ export default function HeritageChat() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -29,6 +31,61 @@ export default function HeritageChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    // Initialize Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'zh-CN';
+
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        if (finalTranscript) {
+          setInputValue(prev => prev + finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    } else {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          setIsRecording(true);
+        } catch (e) {
+          console.error("Failed to start recording:", e);
+        }
+      } else {
+        alert("您的浏览器不支持语音识别功能。");
+      }
+    }
+  };
 
   const handleSend = () => {
     if (!inputValue.trim() || isLoading) return;
@@ -142,7 +199,18 @@ export default function HeritageChat() {
 
       {/* Input Area */}
       <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#B8D8C8]/40 p-3 pb-safe shadow-sm z-50">
-        <div className="flex items-center gap-3 max-w-md mx-auto">
+        <div className="flex items-center gap-2 max-w-md mx-auto">
+          <button
+            onClick={toggleRecording}
+            className={cn(
+              "p-2 rounded-full transition-colors flex-shrink-0",
+              isRecording ? "text-red-500 bg-red-50 animate-pulse" : "text-[#2D5A4A] hover:bg-[#E8F5F0]"
+            )}
+            title="语音输入"
+          >
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
+          
           <div className="flex-1 bg-[#F8F9F5] rounded-full px-4 py-2.5 border border-[#EAEAEA] focus-within:ring-1 focus-within:ring-[#B8D8C8] transition-shadow">
             <input
               type="text"

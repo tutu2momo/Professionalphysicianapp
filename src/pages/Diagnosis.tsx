@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, User, Bot, Loader2, Info, Sparkles, ChevronLeft, ClipboardList, Pill, Camera, Video, X, ChevronDown, ArrowRight } from "lucide-react";
+import { Send, User, Bot, Loader2, Info, Sparkles, ChevronLeft, ClipboardList, Pill, Camera, Video, X, ChevronDown, ArrowRight, Mic, MicOff } from "lucide-react";
 import { GoogleGenAI, Chat } from "@google/genai";
 import { cn } from "@/src/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -255,6 +255,9 @@ export default function Diagnosis() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -275,7 +278,60 @@ export default function Diagnosis() {
     } catch (e) {
       console.error("Failed to create chat:", e);
     }
+
+    // Initialize Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'zh-CN';
+
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        if (finalTranscript) {
+          setInput(prev => prev + finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
   }, []);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    } else {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          setIsRecording(true);
+        } catch (e) {
+          console.error("Failed to start recording:", e);
+        }
+      } else {
+        alert("您的浏览器不支持语音识别功能。");
+      }
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
@@ -721,6 +777,17 @@ export default function Diagnosis() {
             title="脉诊 (录像)"
           >
             <Video className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={toggleRecording}
+            className={cn(
+              "p-2 rounded-full transition-colors flex-shrink-0",
+              isRecording ? "text-red-500 bg-red-50 animate-pulse" : "text-[#2D5A4A] hover:bg-[#E8F5F0]"
+            )}
+            title="语音输入"
+          >
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
 
           <input
