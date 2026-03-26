@@ -8,6 +8,9 @@ import Profile from "./pages/Profile";
 import RecordDetail from "./pages/RecordDetail";
 import HeritageChat from "./pages/HeritageChat";
 import HeritageEval from "./pages/HeritageEval";
+import PrescriptionDetail from "./pages/recommendations/PrescriptionDetail";
+import CaseComparison from "./pages/recommendations/CaseComparison";
+import MasterThinking from "./pages/recommendations/MasterThinking";
 
 export default function App() {
   return (
@@ -21,6 +24,9 @@ export default function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="record/:id" element={<RecordDetail />} />
         </Route>
+        <Route path="recommendation/prescription" element={<PrescriptionDetail />} />
+        <Route path="recommendation/cases" element={<CaseComparison />} />
+        <Route path="recommendation/thinking" element={<MasterThinking />} />
         <Route path="/heritage/chat" element={
           <div className="min-h-screen bg-[#e8e2d9] flex justify-center font-serif text-[#2c2416]">
             <div className="w-full max-w-md bg-[#f5f1eb] h-screen relative shadow-2xl overflow-hidden flex flex-col" style={{ transform: 'translateZ(0)' }}>

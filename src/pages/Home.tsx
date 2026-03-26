@@ -171,7 +171,7 @@ export default function Home() {
         <div className="mb-8">
           <h2 className="text-[15px] font-bold text-[#333333] mb-3 tracking-wide">今日内容推荐</h2>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md">
+            <Link to="/recommendation/prescription" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
               <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
                 <FlaskConical className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
               </div>
@@ -180,9 +180,9 @@ export default function Home() {
                 <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">半夏白术天麻汤</div>
                 <div className="text-[10px] text-[#666666]">近期病例关联度高</div>
               </div>
-            </div>
+            </Link>
             
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md">
+            <Link to="/recommendation/cases" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
               <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
                 <FileSearch className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
               </div>
@@ -191,9 +191,9 @@ export default function Home() {
                 <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">头痛病案 12 例对比</div>
                 <div className="text-[10px] text-[#666666]">相似症候分析</div>
               </div>
-            </div>
+            </Link>
 
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md">
+            <Link to="/recommendation/thinking" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
               <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
                 <Brain className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
               </div>
@@ -202,7 +202,7 @@ export default function Home() {
                 <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">脾胃虚寒的辨证要点</div>
                 <div className="text-[10px] text-[#666666]">基于您的学习进度</div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
 
