@@ -23,10 +23,10 @@ export default function App() {
           <Route path="classics" element={<Classics />} />
           <Route path="profile" element={<Profile />} />
           <Route path="record/:id" element={<RecordDetail />} />
+          <Route path="recommendation/prescription" element={<PrescriptionDetail />} />
+          <Route path="recommendation/cases" element={<CaseComparison />} />
+          <Route path="recommendation/thinking" element={<MasterThinking />} />
         </Route>
-        <Route path="recommendation/prescription" element={<PrescriptionDetail />} />
-        <Route path="recommendation/cases" element={<CaseComparison />} />
-        <Route path="recommendation/thinking" element={<MasterThinking />} />
         <Route path="/heritage/chat" element={
           <div className="min-h-screen bg-[#e8e2d9] flex justify-center font-serif text-[#2c2416]">
             <div className="w-full max-w-md bg-[#f5f1eb] h-screen relative shadow-2xl overflow-hidden flex flex-col" style={{ transform: 'translateZ(0)' }}>

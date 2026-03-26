@@ -5,7 +5,7 @@ export default function MasterThinking() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#F8F9F5] pb-8 font-sans">
+    <div className="min-h-screen bg-[#F8F9F5] pb-24 font-sans">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#B8D8C8]/40 px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-[#E8F5F0] text-[#2D5A4A] transition-colors">
