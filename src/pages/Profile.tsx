@@ -1,15 +1,18 @@
 import { User, FileText, Bookmark, Settings, HelpCircle, ChevronRight, Activity } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { id: 1, icon: User, title: "个人信息", desc: "查看和编辑个人资料" },
-  { id: 2, icon: Activity, title: "执业信息", desc: "医师资质与执业机构" },
-  { id: 3, icon: FileText, title: "我的笔记", desc: "临床笔记与学习记录" },
-  { id: 4, icon: Bookmark, title: "我的收藏", desc: "收藏的方剂与医案" },
-  { id: 5, icon: Settings, title: "设置", desc: "应用设置与偏好" },
-  { id: 6, icon: HelpCircle, title: "帮助与反馈", desc: "使用帮助与问题反馈" },
+  { id: 1, icon: User, title: "个人信息", desc: "查看和编辑个人资料", path: "/profile/personal-info" },
+  { id: 2, icon: Activity, title: "执业信息", desc: "医师资质与执业机构", path: "/profile/practice-info" },
+  { id: 3, icon: FileText, title: "我的笔记", desc: "临床笔记与学习记录", path: "/profile/my-notes" },
+  { id: 4, icon: Bookmark, title: "我的收藏", desc: "收藏的方剂与医案", path: "/profile/my-favorites" },
+  { id: 5, icon: Settings, title: "设置", desc: "应用设置与偏好", path: "/profile/settings" },
+  { id: 6, icon: HelpCircle, title: "帮助与反馈", desc: "使用帮助与问题反馈", path: "/profile/help-feedback" },
 ];
 
 export default function Profile() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-[#F8F9F5] pt-6 px-4 pb-24 font-sans relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none bg-[url('/bg-qingming.jpg')] bg-cover bg-center opacity-90 fixed" />
@@ -32,15 +35,15 @@ export default function Profile() {
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="rounded-2xl p-4 text-center bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm">
+          <div className="rounded-2xl p-4 text-center bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/')}>
             <div className="text-2xl text-[#2D5A4A] font-bold mb-1">156</div>
             <div className="text-[10px] text-[#666666] tracking-wider">诊疗记录</div>
           </div>
-          <div className="rounded-2xl p-4 text-center bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm">
+          <div className="rounded-2xl p-4 text-center bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/profile/my-notes')}>
             <div className="text-2xl text-[#2D5A4A] font-bold mb-1">42</div>
             <div className="text-[10px] text-[#666666] tracking-wider">学习笔记</div>
           </div>
-          <div className="rounded-2xl p-4 text-center bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm">
+          <div className="rounded-2xl p-4 text-center bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/profile/my-favorites')}>
             <div className="text-2xl text-[#2D5A4A] font-bold mb-1">28</div>
             <div className="text-[10px] text-[#666666] tracking-wider">收藏内容</div>
           </div>
@@ -50,6 +53,7 @@ export default function Profile() {
           {menuItems.map((item) => (
             <div
               key={item.id}
+              onClick={() => navigate(item.path)}
               className="rounded-2xl p-4 flex items-center gap-4 bg-white/70 backdrop-blur-md border border-[#B8D8C8]/40 shadow-sm active:scale-95 transition-transform cursor-pointer hover:bg-white/90"
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#E8F5F0] border border-[#B8D8C8]/30">

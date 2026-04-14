@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import {
   Stethoscope, BookOpen, ChevronRight, Activity, Calendar,
   FlaskConical, Leaf, FileText, ClipboardList,
-  GraduationCap, Award, FileSearch, Brain, Library
+  GraduationCap, Award, FileSearch, Brain, Library, Sparkles,
+  Bell
 } from "lucide-react";
 
 const Swallow = ({ className }: { className?: string }) => (
@@ -19,8 +20,8 @@ const Willow = ({ className }: { className?: string }) => (
 );
 
 const tools = [
+  { name: "常用药方", icon: FlaskConical, path: "/tools/prescriptions" },
   { name: "古籍检索", icon: Library, path: "/classics" },
-  { name: "方剂工具箱", icon: FlaskConical, path: "/classics" },
   { name: "中药药典", icon: Leaf, path: "/classics" },
   { name: "临床笔记", icon: FileText, path: "/profile" },
   { name: "诊疗记录", icon: ClipboardList, path: "/profile" },
@@ -35,9 +36,15 @@ export default function Home() {
       
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex flex-col items-center mb-8 mt-4">
-          <h1 className="text-3xl text-[#2D5A4A] font-serif tracking-widest mb-2" style={{ fontFamily: 'var(--font-serif)' }}>中医数字传承平台</h1>
-          <p className="text-xs text-[#2D5A4A]/70 tracking-[0.2em] font-medium uppercase">TCM Digital Heritage Platform</p>
+        <div className="flex items-center justify-between mb-8 mt-4">
+          <div className="flex flex-col">
+            <h1 className="text-2xl text-[#2D5A4A] font-serif tracking-widest mb-1" style={{ fontFamily: 'var(--font-serif)' }}>中医数字传承平台</h1>
+            <p className="text-[10px] text-[#2D5A4A]/70 tracking-[0.15em] font-medium uppercase">TCM Digital Heritage Platform</p>
+          </div>
+          <Link to="/internet-hospital/messages" className="relative p-2 bg-white/60 rounded-full border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform">
+            <Bell className="w-5 h-5 text-[#2D5A4A]" />
+            <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
+          </Link>
         </div>
 
         {/* Doctor Card */}
@@ -169,38 +176,47 @@ export default function Home() {
 
         {/* 今日内容推荐 */}
         <div className="mb-8">
-          <h2 className="text-[15px] font-bold text-[#333333] mb-3 tracking-wide">今日内容推荐</h2>
+          <div className="flex flex-col mb-3">
+            <h2 className="text-[15px] font-bold text-[#333333] tracking-wide">今日内容推荐</h2>
+            <div className="flex items-center gap-1 mt-1">
+              <Sparkles className="w-3 h-3 text-[#8B6E58]" />
+              <span className="text-[10px] text-[#8B6E58]">基于您的单人偏好与平台群体数据智能推荐</span>
+            </div>
+          </div>
           <div className="space-y-3">
-            <Link to="/recommendation/prescription" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
-              <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
-                <FlaskConical className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
-              </div>
-              <div>
-                <div className="text-[10px] text-[#8B6E58] mb-0.5 tracking-wider">今日推荐方剂</div>
-                <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">半夏白术天麻汤</div>
-                <div className="text-[10px] text-[#666666]">近期病例关联度高</div>
-              </div>
-            </Link>
-            
-            <Link to="/recommendation/cases" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
-              <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
-                <FileSearch className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
-              </div>
-              <div>
-                <div className="text-[10px] text-[#8B6E58] mb-0.5 tracking-wider">你可能需要查看</div>
-                <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">头痛病案 12 例对比</div>
-                <div className="text-[10px] text-[#666666]">相似症候分析</div>
-              </div>
-            </Link>
-
+            {/* Item 1: 常用病种 */}
             <Link to="/recommendation/thinking" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
               <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
                 <Brain className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
               </div>
               <div>
-                <div className="text-[10px] text-[#8B6E58] mb-0.5 tracking-wider">名医思维</div>
+                <div className="text-[10px] text-[#8B6E58] mb-0.5 tracking-wider">常用病种推荐</div>
                 <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">脾胃虚寒的辨证要点</div>
-                <div className="text-[10px] text-[#666666]">基于您的学习进度</div>
+                <div className="text-[10px] text-[#666666]">结合您近期高频接诊记录</div>
+              </div>
+            </Link>
+            
+            {/* Item 2: 常查阅的病种 */}
+            <Link to="/recommendation/cases" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
+              <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
+                <FileSearch className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <div className="text-[10px] text-[#8B6E58] mb-0.5 tracking-wider">常查阅病种</div>
+                <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">头痛病案 12 例对比</div>
+                <div className="text-[10px] text-[#666666]">根据您的历史查阅偏好</div>
+              </div>
+            </Link>
+
+            {/* Item 3: 现有病种诊疗内容最多的 */}
+            <Link to="/recommendation/prescription" className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-[#B8D8C8]/40 shadow-sm backdrop-blur-md active:scale-95 transition-transform hover:bg-white/90">
+              <div className="w-10 h-10 rounded-[12px] bg-[#E8F5F0] flex items-center justify-center flex-shrink-0 shadow-inner">
+                <FlaskConical className="w-5 h-5 text-[#2D5A4A]" strokeWidth={1.5} />
+              </div>
+              <div>
+                <div className="text-[10px] text-[#8B6E58] mb-0.5 tracking-wider">平台热门 / 内容最丰富</div>
+                <div className="text-sm font-bold text-[#333333] mb-0.5 tracking-wide">半夏白术天麻汤临床新用</div>
+                <div className="text-[10px] text-[#666666]">群体偏好：本周诊疗参考最多</div>
               </div>
             </Link>
           </div>
@@ -212,9 +228,9 @@ export default function Home() {
             <div className="w-1 h-4 rounded-full bg-[#2D5A4A]" />
             <h2 className="text-[15px] font-bold text-[#333333] tracking-wide">最近诊疗</h2>
           </div>
-          <button className="text-xs text-[#8B6E58] flex items-center">
+          <Link to="/internet-hospital/patients" className="text-xs text-[#8B6E58] flex items-center">
             全部 <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
 
         <div className="space-y-3">

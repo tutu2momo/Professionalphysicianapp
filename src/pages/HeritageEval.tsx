@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Send, Sparkles, ChevronDown, Bot, User, Mic, MicOff, ArrowRight } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, ChevronDown, Bot, User, Mic, MicOff, ArrowRight, BookOpen, Library, X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 type Message = {
@@ -23,6 +23,13 @@ export default function HeritageEval() {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
   
+  const [excerptModal, setExcerptModal] = useState<{isOpen: boolean, book: string, title: string, content: string}>({
+    isOpen: false,
+    book: '',
+    title: '',
+    content: ''
+  });
+
   const getPatientInfo = () => {
     if (caseData) {
       if (caseData.summary.includes('【患者基本信息】')) {
@@ -321,9 +328,35 @@ export default function HeritageEval() {
                         </div>
                       </div>
                     )}
-                    <div className="text-[15px] leading-relaxed tracking-wide text-justify whitespace-pre-line">
+                    <div className="text-[15px] leading-relaxed tracking-wide text-justify whitespace-pre-line mb-4">
                       {msg.content}
                     </div>
+
+                    {msg.score !== undefined && (
+                      <div className="bg-[#F8F9F5] rounded-xl p-4 border border-[#EAEAEA] mt-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <BookOpen className="w-4 h-4 text-[#8B6E58]" />
+                          <h4 className="font-bold text-[#333333] text-sm">知识欠缺与学习建议</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="bg-white rounded-lg p-3 border border-[#B8D8C8]/30">
+                            <h5 className="font-bold text-[#2D5A4A] text-xs mb-1">胃气不和的辨证深度不足</h5>
+                            <p className="text-xs text-[#666666] mb-3">建议加强对《脾胃论》中关于脾胃虚弱与湿热互结的理解，特别是温胆汤类方剂的加减应用。</p>
+                            <button 
+                              onClick={() => setExcerptModal({
+                                isOpen: true,
+                                book: "《脾胃论》",
+                                title: "脾胃虚弱与湿热互结之机理",
+                                content: "夫脾胃虚，则湿土之气溜于脐下，苦寒之药，正助其湿。…… 凡胃气不和，多由饮食不节，寒温失所，或劳倦伤脾。脾失健运，则水谷不化，聚湿生痰，郁久化热，而成湿热互结之候。治当以辛开苦降，和胃化湿，切忌纯用苦寒，以免更伤脾土。\n\n【名医解析】\n此段论述了脾胃虚弱后，水湿停聚化热的病理过程。在临床中，遇到舌苔黄厚腻但伴有脾胃虚弱症状（如脘腹胀满、食欲不振）的患者，不能仅见“热”而用大量苦寒清热之药（如黄芩、黄连），必须佐以辛温化湿、健脾和胃之品（如半夏、陈皮、生姜），即所谓“辛开苦降”。温胆汤正是体现了这一治疗思想的经典方剂。"
+                              })}
+                              className="w-full py-2 bg-[#E8F5F0] text-[#2D5A4A] text-xs font-bold rounded-md border border-[#B8D8C8]/30 flex items-center justify-center gap-1 hover:bg-[#D1E8DE] transition-colors"
+                            >
+                              <Library className="w-3.5 h-3.5" /> 点击阅读指导用书：《脾胃论》
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -395,6 +428,42 @@ export default function HeritageEval() {
           </button>
         </div>
       </div>
+
+      {/* Excerpt Modal */}
+      {excerptModal.isOpen && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-[#F8F9F5] w-full max-w-sm rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[80vh] border border-[#B8D8C8]/40">
+            <div className="px-4 py-3 bg-white border-b border-[#B8D8C8]/40 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <Library className="w-4 h-4 text-[#2D5A4A]" />
+                <h3 className="font-bold text-[#333333] text-sm">{excerptModal.book} 选段</h3>
+              </div>
+              <button 
+                onClick={() => setExcerptModal({...excerptModal, isOpen: false})} 
+                className="p-1 text-[#999999] hover:text-[#333333] transition-colors rounded-full hover:bg-[#F8F9F5]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto scrollbar-none bg-[url('/bg-qingming.jpg')] bg-cover bg-center bg-fixed">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border border-[#B8D8C8]/30 shadow-sm">
+                <h4 className="font-bold text-[#2D5A4A] mb-4 text-center text-[15px]">{excerptModal.title}</h4>
+                <div className="text-[13px] text-[#333333] leading-loose text-justify whitespace-pre-line font-serif">
+                  {excerptModal.content}
+                </div>
+              </div>
+            </div>
+            <div className="p-3 bg-white border-t border-[#B8D8C8]/40 shrink-0">
+              <button 
+                onClick={() => setExcerptModal({...excerptModal, isOpen: false})} 
+                className="w-full py-2.5 bg-[#2D5A4A] text-white text-sm font-bold rounded-xl shadow-sm active:scale-95 transition-transform hover:bg-[#3A705C]"
+              >
+                我已了解
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

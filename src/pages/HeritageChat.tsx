@@ -137,6 +137,14 @@ export default function HeritageChat() {
 
       {/* Chat Area */}
       <div className="flex-1 p-4 overflow-y-auto pb-20 scrollbar-none relative z-10">
+        {/* AI Disclaimer */}
+        <div className="text-center mb-4">
+          <span className="text-[10px] text-[#8B6E58]/80 bg-[#E8F5F0]/60 px-3 py-1.5 rounded-full border border-[#B8D8C8]/30 inline-flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            AI生成内容仅供参考，请结合临床实际进行辨证施治
+          </span>
+        </div>
+
         {/* Messages */}
         {messages.map((msg) => (
           <div key={msg.id} className={cn("flex mb-4", msg.role === "user" ? "justify-end" : "justify-start")}>

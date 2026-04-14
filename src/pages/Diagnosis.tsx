@@ -496,7 +496,7 @@ export default function Diagnosis() {
         <div className="bg-[#E8F5F0]/50 border border-[#B8D8C8]/40 rounded-xl p-3 flex items-start gap-2 mb-4 backdrop-blur-sm">
           <Info className="w-4 h-4 text-[#2D5A4A] mt-0.5 flex-shrink-0" />
           <p className="text-xs text-[#2D5A4A]/80 leading-relaxed">
-            免责声明：本系统的分析结果仅供临床医生参考，不能替代专业医疗诊断。请结合患者实际情况进行辨证论治。
+            免责声明：AI生成内容仅供参考，不能替代专业医疗诊断，请结合临床实际进行辨证施治。
           </p>
         </div>
 
