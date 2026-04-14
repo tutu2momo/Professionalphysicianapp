@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, User, Bot, Loader2, Info, Sparkles, ChevronLeft, ClipboardList, Pill, Camera, Video, X, ChevronDown, ArrowRight, Mic, MicOff } from "lucide-react";
+import { Send, User, Bot, Loader2, Info, Sparkles, ChevronLeft, ClipboardList, Pill, Camera, Video, X, ChevronDown, ArrowRight, Mic, MicOff, Copy, Link as LinkIcon, Volume2, Square, Check, FileText } from "lucide-react";
 import { GoogleGenAI, Chat } from "@google/genai";
 import { cn } from "@/src/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -258,6 +258,12 @@ export default function Diagnosis() {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
 
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
+  const [emrModal, setEmrModal] = useState<{isOpen: boolean, data: any}>({isOpen: false, data: null});
+  const [prescriptionModal, setPrescriptionModal] = useState<{isOpen: boolean, data: any}>({isOpen: false, data: null});
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -265,6 +271,60 @@ export default function Diagnosis() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const formatDiagnosisText = (data: DiagnosisData) => {
+    let text = `中医辨证：${data.tcm}\n`;
+    text += `治法原则：${data.treatmentPrinciple}\n`;
+    text += `推荐方剂：${data.prescription.name}\n`;
+    text += `处方组成：\n`;
+    data.prescription.herbs.forEach(h => {
+      text += `${h.name} ${h.dosage}\n`;
+    });
+    text += `用法：${data.prescription.usage}\n`;
+    text += `疾病养护建议：\n${data.advice}`;
+    return text;
+  };
+
+  const handleSpeak = (text: string, id: string) => {
+    if (playingId === id) {
+      window.speechSynthesis.cancel();
+      setPlayingId(null);
+      return;
+    }
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.onend = () => setPlayingId(null);
+    window.speechSynthesis.speak(utterance);
+    setPlayingId(id);
+  };
+
+  const handleCopyText = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
+
+  const handleCopyLink = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedLinkId(id);
+      setTimeout(() => setCopiedLinkId(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy link: ", err);
+    }
+  };
 
   useEffect(() => {
     if (!ai) return;
@@ -688,6 +748,40 @@ export default function Diagnosis() {
                       {msg.diagnosisData.advice}
                     </p>
                   </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-[#B8D8C8]/20">
+                    <button 
+                      onClick={() => handleSpeak(formatDiagnosisText(msg.diagnosisData!), msg.id)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F8F9F5] text-[#2D5A4A] hover:bg-[#E8F5F0] transition-colors border border-[#B8D8C8]/30"
+                    >
+                      {playingId === msg.id ? (
+                        <>
+                          <Square className="w-3.5 h-3.5 fill-current" />
+                          <span className="text-[10px] font-medium">停止朗读</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-medium">语音朗读</span>
+                        </>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => setPrescriptionModal({ isOpen: true, data: msg.diagnosisData })}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F8F9F5] text-[#2D5A4A] hover:bg-[#E8F5F0] transition-colors border border-[#B8D8C8]/30"
+                    >
+                      <Pill className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-medium">生成处方</span>
+                    </button>
+                    <button 
+                      onClick={() => setEmrModal({ isOpen: true, data: msg.diagnosisData })}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#2D5A4A] text-white hover:bg-[#23473A] transition-colors shadow-sm"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-medium">生成电子病历</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -808,6 +902,171 @@ export default function Diagnosis() {
           </button>
         </div>
       </div>
+
+      {/* EMR Modal */}
+      {emrModal.isOpen && emrModal.data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-[#F8F9F5] w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="bg-[#2D5A4A] text-white px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setEmrModal({ isOpen: false, data: null })} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="font-medium text-lg">病历详情</span>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="bg-white rounded-xl p-5 shadow-sm space-y-6">
+                <div className="text-center border-b border-gray-100 pb-4">
+                  <h2 className="text-xl font-bold text-[#333333] mb-1">电子病历</h2>
+                  <p className="text-sm text-[#666666]">辽宁中医药大学附属医院互联网医院</p>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#666666]">患者信息</span>
+                    <span className="text-[#333333]">刘宇航 男 31岁</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666666]">就诊时间</span>
+                    <span className="text-[#333333]">2025-10-15 14:49</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666666]">就诊科室</span>
+                    <span className="text-[#333333]">内科其他</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100 pt-4 space-y-4">
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-2">诊断</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[#2D5A4A] border border-[#2D5A4A] px-1.5 py-0.5 rounded">中医疾病</span>
+                      <span className="text-[#333333]">{emrModal.data.tcm.split('（')[0] || emrModal.data.tcm}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-1">主诉</h3>
+                    <p className="text-[#666666] text-sm">老师，功能测试，谢谢</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-1">现病史</h3>
+                    <p className="text-[#666666] text-sm">{emrModal.data.tcm.split('（')[0] || emrModal.data.tcm}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-1">既往史</h3>
+                    <p className="text-[#666666] text-sm">暂无</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-1">过敏史</h3>
+                    <p className="text-[#666666] text-sm">暂无</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-1">体格检查</h3>
+                    <p className="text-[#666666] text-sm">暂无</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-1">治疗意见</h3>
+                    <p className="text-[#666666] text-sm whitespace-pre-line">{emrModal.data.advice}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Button */}
+            <div className="p-4 bg-white border-t border-gray-100">
+              <button 
+                onClick={() => {
+                  setEmrModal({ isOpen: false, data: null });
+                  navigate('/internet-hospital/messages');
+                }}
+                className="w-full py-3 bg-[#42B983] text-white rounded-lg font-medium hover:bg-[#3AA876] transition-colors"
+              >
+                复制到互联网医院
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prescription Modal */}
+      {prescriptionModal.isOpen && prescriptionModal.data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-[#F8F9F5] w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="bg-[#2D5A4A] text-white px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setPrescriptionModal({ isOpen: false, data: null })} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="font-medium text-lg">处方详情</span>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="bg-white rounded-xl p-5 shadow-sm space-y-6">
+                <div className="text-center border-b border-gray-100 pb-4">
+                  <h2 className="text-xl font-bold text-[#333333] mb-1">电子处方笺</h2>
+                  <p className="text-sm text-[#666666]">辽宁中医药大学附属医院互联网医院</p>
+                </div>
+
+                <div className="space-y-3 text-sm border-b border-gray-100 pb-4">
+                  <div className="flex justify-between">
+                    <span className="text-[#666666]">患者信息</span>
+                    <span className="text-[#333333]">刘宇航 男 31岁</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666666]">开具时间</span>
+                    <span className="text-[#333333]">2025-10-15 14:50</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-bold text-[#333333] mb-2 text-lg">Rp</h3>
+                    <p className="text-sm font-bold text-[#2D5A4A] mb-3">{prescriptionModal.data.prescription.name}</p>
+                    <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                      {prescriptionModal.data.prescription.herbs.map((herb: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center border-b border-dashed border-gray-200 pb-1">
+                          <span className="text-[#333333] text-sm font-medium">{herb.name}</span>
+                          <span className="text-[#666666] text-sm">{herb.dosage}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-[#F8F9F5] p-3 rounded-lg text-sm text-[#666666] leading-relaxed border border-[#EAEAEA]">
+                    <span className="font-medium text-[#333333]">用法用量：</span>{prescriptionModal.data.prescription.usage}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Button */}
+            <div className="p-4 bg-white border-t border-gray-100">
+              <button 
+                onClick={() => {
+                  setPrescriptionModal({ isOpen: false, data: null });
+                  navigate('/internet-hospital/messages');
+                }}
+                className="w-full py-3 bg-[#42B983] text-white rounded-lg font-medium hover:bg-[#3AA876] transition-colors"
+              >
+                复制到互联网医院
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
